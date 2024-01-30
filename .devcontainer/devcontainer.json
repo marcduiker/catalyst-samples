@@ -1,0 +1,14 @@
+{
+	"name": "Catalyst C# (.NET)",
+	"image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-bookworm",
+	"postCreateCommand": "bash install-scripts/devcontainer-csharp.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csharp",
+				"humao.rest-client"
+			]
+		}
+	},
+	"remoteUser": "root"
+}
