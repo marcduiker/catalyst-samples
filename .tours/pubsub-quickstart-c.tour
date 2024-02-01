@@ -1,0 +1,38 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Pub/Sub Quickstart C#",
+  "steps": [
+    {
+      "title": "Introduction",
+      "description": "## Introduction\n\nThis guide gets you up and running with the Catalyst Publish/Subscribe API in minutes using the Diagrid CLI.\n\n### Prerequisites\n\n- Diagrid Catalyst Account\n- [Diagrid CLI](https://docs.diagrid.io/catalyst/references/cli-reference/intro)\n\nIf you're using the devcontainer or CodeSpace for this repository the Diagrid CLI is already installed."
+    },
+    {
+      "title": "Login",
+      "description": "## Login\n\n1. Authenticate to your Diagrid Catalyst organization using the following command:\n\n>> diagrid login\n\n  And follow the instructions\n\n2. Confirm your login was successful:\n\n>> diagrid whoami"
+    },
+    {
+      "title": "Create a project",
+      "description": "## Create a project\n\nYou can check if you have existing projects by running:\n\n>> diagrid project list\n\n1. If you do not have an existing project available within your organization, create a new Catalyst project and deploy the default pub/sub broker.\n\n>> diagrid project create catalyst-project --deploy-managed-pubsub\n\n2. If you have a project already available, ensure the managed broker is deployed. If not, you can create it using the following command:\n\n>> diagrid pubsub create pubsub\n\n3. To set this project as the default project in the Diagrid CLI, run:\n\n>> diagrid project use catalyst-project"
+    },
+    {
+      "title": "Create application identities",
+      "description": "## Create application identities\n\nIn Catalyst, each application workload is represented via a corresponding remote identity, known as an App ID. To test asychronous communication between two applications, two App IDs are required.\n\n1. Create two App IDs: One to represent the publishing app and another to represent the consuming, or subscribing, app.\n\n>> diagrid appid create publisher\n\n>> diagrid appid create consumer\n\n2. Verify that the status of the App IDs is *ready*:\n\n>> diagrid appid list"
+    },
+    {
+      "title": "Create pub/sub topic subscription",
+      "description": "## Create pub/sub topic subscription\n\nWith the Diagrid Pub/Sub broker in place, the next step is to create a topic subscription through which the consumer App ID can subscribe to messages.\n\n1. Use the following command to ensure all messages sent to the `orders` topic are routed to the `/orders` endpoint of the consumer application:\n\n>> diagrid subscription create pubsub-consumer --connection pubsub --topic orders --route /pubsub/neworders --scopes consumer\n\n2. The the status of the subscription by running:\n\n>> diagrid subscription list"
+    },
+    {
+      "title": "Simulate the consumer application",
+      "description": "## Simulate the consumer application\n\nThe Diagrid CLI provides a set of commands that allow you to test the Catalyst APIs without deploying applications for the publisher and consumer App IDs.\n\nRun the command below to simulate the consumer app and listen for events related to the `pubsub-consumer` topic subscription. The initial setup might take a moment, but subsequent interactions are faster.\n\n>> diagrid listen --app-id consumer --subscription pubsub-consumer\n\nThis blocking command acts as a local consumer application, logging incoming messages from the specified subscription."
+    },
+    {
+      "title": "Publish a message",
+      "description": "## Publish a message\n\nTo publish a message to the `orders` topic, open a new terminal and run the following command:\n\n`diagrid call publish orders --connection pubsub --data '{\"orderId\":1}' --app-id publisher`\n\nThis command, representing the publisher's action, sends a message containing an simple order payload to the orders topic. A successful dispatch will return a 204 status code.\n\nReturn to the terminal listening to the consumer application to see the incoming message.\n\nFor experimentation, modify the orderId value and dispatch multiple messages. The consumer, simulated in the terminal, should promptly log these incoming messages."
+    },
+    {
+      "title": "Clean up resources",
+      "description": "## Clean up resources\n\nIf you're not going to continue to use these resources, run the following commands to remove them from your project:\n\n>> diagrid appid delete publisher \n\n>> diagrid appid delete consumer\n\nIf you want to delete the entire Catalyst project, including the managed infrastructure resources, run the `diagrid project delete` command.\n\n>> diagrid project delete catalyst-project"
+    }
+  ]
+}
