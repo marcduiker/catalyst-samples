@@ -1,0 +1,42 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "2 - Pub/Sub Local C#",
+  "steps": [
+    {
+      "title": "Introduction",
+      "description": "## Introduction\n\nThis tutorial showcases how to enable the publisher-subscriber pattern between two locally-running applications via the Diagrid Pub/Sub API.\n\nTo complete this tutorial you will:\n\n- Create Diagrid resources required to enable Pub/Sub messaging between two applications.\n- Establish a connection between the application services and associated Catalyst App IDs.\n- Test the Pub/Sub API to ensure messages are successfully published and delivered.\n\n### Prerequisites\n\n- Diagrid Catalyst Account\n- [Diagrid CLI](https://docs.diagrid.io/catalyst/references/cli-reference/intro)\n- [Git](https://git-scm.com/downloads)\n- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)\n\nIf you're using the devcontainer or CodeSpace for this repository all tools and SDks are already installed."
+    },
+    {
+      "title": "Clone the samples repo",
+      "description": "## Clone the catalyst-samples repo\n\n> If you're using the devcontainer / CodeSpace you can skip this step.\n\nBegin by cloning the [catalyst-samples](https://github.com/diagridio/catalyst-samples) repository to your local machine with the following command:\n\n`git clone https://github.com/diagridio/catalyst-samples.git`\n\n"
+    },
+    {
+      "title": "Login",
+      "description": "## Login\n\n1. Authenticate to your Diagrid Catalyst organization using the following command:\n\n>> diagrid login\n\n  And follow the instructions\n\n2. Confirm your login was successful:\n\n>> diagrid whoami"
+    },
+    {
+      "title": "Create a project",
+      "description": "## Create a project\n\nYou can check if you have existing projects by running:\n\n>> diagrid project list\n\n1. If you do not have an existing project available within your organization, create a new Catalyst project and deploy the default pub/sub broker.\n\n>> diagrid project create catalyst-project --deploy-managed-pubsub\n\n2. If you have a project already available, ensure the managed broker is deployed. If not, you can create it using the following command:\n\n>> diagrid pubsub create pubsub\n\n3. To set this project as the default project in the Diagrid CLI, run:\n\n>> diagrid project use catalyst-project"
+    },
+    {
+      "title": "Create application identities",
+      "description": "## Create application identities\n\nIn Catalyst, each application workload is represented via a corresponding remote identity, known as an App ID. To test asychronous communication between two applications, two App IDs are required.\n\n1. Create two App IDs: One to represent the publishing app and another to represent the consuming, or subscribing, app.\n\n>> diagrid appid create publisher\n\n>> diagrid appid create consumer\n\n2. Verify that the status of the App IDs is *ready*:\n\n>> diagrid appid list"
+    },
+    {
+      "title": "Create pub/sub topic subscription",
+      "description": "## Create pub/sub topic subscription\n\nWith the Diagrid Pub/Sub broker in place, the next step is to create a topic subscription through which the consumer App ID can subscribe to messages.\n\n1. Use the following command to ensure all messages sent to the `orders` topic are routed to the `/orders` endpoint of the consumer application:\n\n>> diagrid subscription create pubsub-consumer --connection pubsub --topic orders --route /pubsub/neworders --scopes consumer\n\n2. The the status of the subscription by running:\n\n>> diagrid subscription list"
+    },
+    {
+      "title": "Connect the application to Catalyst",
+      "description": "## Connect the applications to Catalyst\n\nTo easily run the applications and connect them to their respective App IDs using a single command, you can use a Catalyst dev config file. This is a YAML file that will be automatically generated based on the App IDs created in the previous section.\n\nWhen used with the `diagrid dev start` command, the dev config file will:\n\nRun the `publisher` and `consumer` applications with all required environment variables needed to connect the Dapr SDK to Diagrid Catalyst.\nCreate a Local App Connection for the `consumer` application on the local `appPort`, which will route all traffic destined for the `consumer` App ID to the local port where the code is running.\n\n1. Navigate to the root directory of the csharp app and install all dotnet dependencies.\n\n>> cd csharp\n\n>> dotnet build\n\n2. Set up your local Catalyst development environment by running the following scaffold command:\n\n>> diagrid dev scaffold\n\n3. Open the auto-generated YAML file and add or update the `publisher` App ID section with the following:\n\n- `workDir`: current directory, `.`\n- `env.ASPNETCORE_URLS`: the endpoint your application will listen on, `http://localhost:5001`\n- `command`: the application run command, `[\"dotnet\", \"run\"]`\n\nIn addition, remove the `env.appPort`. The publisher is making an inbound call to the Catalyst APIs and does not require an app connection to your the local machine.\n\n```yaml\n  - appId: publisher\n    env:\n      DAPR_API_TOKEN: <publisher-api-token>\n      DAPR_APP_ID: publisher\n      DAPR_GRPC_ENDPOINT: <grpc-endpoint>\n      DAPR_HTTP_ENDPOINT: <http-endpoint>\n      ASPNETCORE_URLS: http://localhost:5001\n    workDir: .\n    command: [\"dotnet\", \"run\"]\n```\n\nSimilarily, add or update the consumer App ID section with the following:\n\n- `workDir`: current directory, `.`\n- `env.ASPNETCORE_URLS`: the port your application will listen on, `http://localhost:5002`\n- `command`: the application run command, `[\"dotnet\", \"run\"]`\n- `appPort`: used to establish an app connection from Catalyst to the locally-running consumer app, `5002`\n\n```yaml\n  - appId: consumer\n    appPort: 5002\n    env:\n      DAPR_API_TOKEN: <consumer-api-token>\n      DAPR_APP_ID: consumer\n      DAPR_GRPC_ENDPOINT: <grpc-endpoint>\n      DAPR_HTTP_ENDPOINT: <http-endpoint>\n      ASPNETCORE_URLS: http://localhost:5002\n    workDir: .\n    command: [\"dotnet\", \"run\"]\n```\n\nRun your applications and connect the `consumer` App ID to the local consumer app using the following command.\n\n>> diagrid dev start"
+    },
+    {
+      "title": "Interact with Catalyst APIs",
+      "description": "## Interact with Catalyst APIs\n\nWith the applications now successfully running, it's time to test the publisher and consumer App IDs. To kick off the test, post a simple payload to the publisher app which then gets published as a message for the consumer to receive. Use the curl command below or take advantage of the [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) using Visual Studio Code with the [test.rest](./test.rest) file in the root folder of the repo.\n\nOpen a new terminal and execute the following curl command:\n\n`curl -i -X POST http://localhost:5001/pubsub/orders -H \"Content-Type: application/json\" -d '{\"orderId\":1}'`\n\nUpon successful execution, the publisher app logs should show an indication that a message was successfully published, and the consumer app logs should indicate the message was successfully received.\n\nTo stop the applications use CTL-C and to disconnect the local app connection from the consumer App ID run the following:\n\n>> diagrid dev stop"
+    },
+    {
+      "title": "Clean up resources",
+      "description": "## Clean up resources\n\nIf you're not going to continue to use these resources, run the following commands to remove them from your project:\n\n>> diagrid appid delete publisher \n\n>> diagrid appid delete consumer\n\nIf you want to delete the entire Catalyst project, including the managed infrastructure resources, run the `diagrid project delete` command.\n\n>> diagrid project delete catalyst-project"
+    }
+  ]
+}

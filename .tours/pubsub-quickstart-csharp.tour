@@ -1,6 +1,6 @@
 {
   "$schema": "https://aka.ms/codetour-schema",
-  "title": "Pub/Sub Quickstart C#",
+  "title": "1 - Pub/Sub Quickstart C#",
   "steps": [
     {
       "title": "Introduction",
