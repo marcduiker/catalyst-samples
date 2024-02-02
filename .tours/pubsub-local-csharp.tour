@@ -11,6 +11,16 @@
       "description": "## Clone the catalyst-samples repo\n\n> If you're using the devcontainer / CodeSpace you can skip this step.\n\nBegin by cloning the [catalyst-samples](https://github.com/diagridio/catalyst-samples) repository to your local machine with the following command:\n\n`git clone https://github.com/diagridio/catalyst-samples.git`\n\n"
     },
     {
+      "file": "csharp/csharp.csproj",
+      "description": "## Csproj file\n\nThe project references `Dapr.Client` and  `Dapr.AspNetCore`.",
+      "line": 1
+    },
+    {
+      "file": "csharp/Program.cs",
+      "description": "## Program.cs",
+      "line": 1
+    },
+    {
       "title": "Login",
       "description": "## Login\n\n1. Authenticate to your Diagrid Catalyst organization using the following command:\n\n>> diagrid login\n\n  And follow the instructions\n\n2. Confirm your login was successful:\n\n>> diagrid whoami"
     },
